@@ -257,8 +257,10 @@ function givenAnSnsToSqsEvent (sns, sqs, rawDelivery) {
 			handler: "handler.hello",
 			events: [{
 				snsToSqs: {
-					sns,
-					rawMessageDelivery: rawDelivery,
+					event: {
+						sns: sns,
+						rawMessageDelivery: rawDelivery,
+					},
 					sqs
 				}
 			}]

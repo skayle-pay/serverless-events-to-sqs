@@ -1,14 +1,14 @@
 const schema = require("../src/schema");
 
 describe("schema", () => {
-	test('when "sns" is missing it should error', () => {
+	test('when "event" is missing it should error', () => {
 		const {error} = schema.validate({
 			sqs: "arn:aws:sqs"
 		});
     
 		expect(error).toBeTruthy();
 	});
-  
+
 	test('when "sqs" is missing it should error', () => {
 		const {error} = schema.validate({
 			sns: "arn:aws:sns"
@@ -19,17 +19,32 @@ describe("schema", () => {
   
 	test("sns and sqs can be a simple ARN", () => {
 		const {error} = schema.validate({
-			sns: "arn:aws:sns",
+			event: {
+				sns: "arn:aws:sns"
+			},
 			sqs: "arn:aws:sqs"
 		});
     
 		expect(error).toBeFalsy();
 	});
-  
+
+	test("eventBridge should have a event bus name", () => {
+		const {error} = schema.validate({
+			event: {
+				eventBus: "custom-event-bus"
+			},
+			sqs: "arn:aws:sqs"
+		});
+    
+		expect(error).toBeFalsy();
+	});
+
 	test("sns can be a Ref", () => {
 		const {error} = schema.validate({
-			sns: {
-				Ref: "MyTopic"
+			event: {
+				sns: {
+					Ref: "MyTopic"
+				},
 			},
 			sqs: "arn:aws:sqs"
 		});
@@ -39,8 +54,10 @@ describe("schema", () => {
   
 	test("sns can be a simple Sub", () => {
 		const {error} = schema.validate({
-			sns: {
-				"Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::Account}:topic"
+			event: {
+			  sns: {
+  				"Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::Account}:topic"
+				}
 			},
 			sqs: "arn:aws:sqs"
 		});
@@ -50,13 +67,15 @@ describe("schema", () => {
   
 	test("sns can be a complex Sub", () => {
 		const {error} = schema.validate({
-			sns: {
-				"Fn::Sub": [
-					"arn:aws:sns:${AWS::Region}:${AWS::Account}:${TopicName}",
-					{
-						"TopicName": "MyTopic"
-					}
-				]
+			event: {
+				sns: {
+					"Fn::Sub": [
+						"arn:aws:sns:${AWS::Region}:${AWS::Account}:${TopicName}",
+						{
+							"TopicName": "MyTopic"
+						}
+					]
+				}
 			},
 			sqs: "arn:aws:sqs"
 		});
@@ -66,8 +85,10 @@ describe("schema", () => {
   
 	test("sns can be a simple ImportValue", () => {
 		const {error} = schema.validate({
-			sns: {
-				"Fn::ImportValue": "OtherStack-TopicName"
+			event: {
+				sns: {
+					"Fn::ImportValue": "OtherStack-TopicName"
+				}
 			},
 			sqs: "arn:aws:sqs"
 		});
@@ -77,9 +98,11 @@ describe("schema", () => {
   
 	test("sns can be a complex ImportValue", () => {
 		const {error} = schema.validate({
-			sns: {
-				"Fn::ImportValue": {
-					"Fn::Sub": "${OtherStack}-TopicName"
+			event: {
+				sns: {
+					"Fn::ImportValue": {
+						"Fn::Sub": "${OtherStack}-TopicName"
+					}
 				}
 			},
 			sqs: "arn:aws:sqs"
@@ -90,9 +113,11 @@ describe("schema", () => {
   
 	test("sns can be an object", () => {
 		const {error} = schema.validate({
-			sns: {
-				displayName: "my-topic",
-				topicName: "my-topic"
+			event: {
+				sns: {
+					displayName: "my-topic",
+					topicName: "my-topic"
+				}
 			},
 			sqs: "arn:aws:sqs"
 		});
@@ -102,8 +127,10 @@ describe("schema", () => {
   
 	test("when sns is an object, sns.displayName is required", () => {
 		const {error} = schema.validate({
-			sns: {
-				topicName: "my-topic"
+			event: {
+				sns: {
+					topicName: "my-topic"
+				}
 			},
 			sqs: "arn:aws:sqs"
 		});
@@ -113,7 +140,9 @@ describe("schema", () => {
   
 	test("sqs can be a GetAtt", () => {
 		const {error} = schema.validate({
-			sns: "arn:aws:sns",
+			event: {
+				sns: "arn:aws:sns",
+			},
 			sqs: {
 				"Fn::GetAtt": ["MyQueue", "Arn"]
 			}
@@ -124,7 +153,9 @@ describe("schema", () => {
   
 	test("sqs can be a simple Sub", () => {
 		const {error} = schema.validate({
-			sns: "arn:aws:sns",
+			event: {
+				sns: "arn:aws:sns"
+			},
 			sqs: {
 				"Fn::Sub": "arn:aws:sqs:${AWS::Region}:${AWS::Account}:myQueue"
 			}
@@ -135,7 +166,9 @@ describe("schema", () => {
   
 	test("sqs can be a complex Sub", () => {
 		const {error} = schema.validate({
-			sns: "arn:aws:sns",
+			event: {
+				sns: "arn:aws:sns"
+			},
 			sqs: {
 				"Fn::Sub": [
 					"arn:aws:sqs:${AWS::Region}:${AWS::Account}:${QueueName}",
@@ -151,7 +184,9 @@ describe("schema", () => {
   
 	test("sqs can be a simple ImportValue", () => {
 		const {error} = schema.validate({
-			sns: "arn:aws:sns",
+			event: {
+				sns: "arn:aws:sns"
+			},
 			sqs: {
 				"Fn::ImportValue": "OtherStack-QueueName"
 			},
@@ -162,7 +197,9 @@ describe("schema", () => {
   
 	test("sqs can be a complex ImportValue", () => {
 		const {error} = schema.validate({
-			sns: "arn:aws:sns",
+			event: {
+				sns: "arn:aws:sns"
+			},
 			sqs: {
 				"Fn::ImportValue": {
 					"Fn::Sub": "${OtherStack}-QueueName"
@@ -175,7 +212,9 @@ describe("schema", () => {
   
 	test("sqs can be an object", () => {
 		const {error} = schema.validate({
-			sns: "arn:aws:sns",
+			event: {
+				sns: "arn:aws:sns"
+			},
 			sqs: {
 				queueName: "my-queue",
 				delaySeconds: 30

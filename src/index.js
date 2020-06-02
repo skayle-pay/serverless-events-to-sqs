@@ -134,6 +134,27 @@ class ServerlessSnsToSqsEvents {
 		};
 	}
 
+	getEventBusName({ eventBus }) {
+		return eventBus;
+	}
+
+	createEventBusRule(sqsArn, eventBusName, { pattern }) {
+		return {
+			Type: "AWS::Events::Rule",
+			Properties: {
+				EventBusName: eventBusName,
+				EventPattern: pattern,
+				State: "ENABLED",
+				Targets: [
+					{
+						Id: "sqs-queue",
+						Arn: sqsArn
+					}
+				]
+			}
+		};
+	}
+
 	createSnsSubscription(sqsArn, snsArn, { rawMessageDelivery, filterPolicy }) {
 		return {
 			Type: "AWS::SNS::Subscription",
@@ -224,17 +245,24 @@ class ServerlessSnsToSqsEvents {
 						}
 
 						const sqsArn = this.getOrCreateSqsQueue(value);
-						const snsArn = this.getOrCreateSnsTopic(value);
-						const snsSubscription = this.createSnsSubscription(sqsArn, snsArn, value);
-						const snsSubscriptionLogicalId = this.getSnsSubscriptionLogicalId(functionName, sqsArn, snsArn);
-						this.addToTemplate(snsSubscriptionLogicalId, snsSubscription);
-						this.verboseLog(`added SNS subscription: ${snsSubscription}`);
-
 						const sqsUrl = this.getSqsUrl(sqsArn);
-						const sqsPolicy = this.createSqsPolicy(sqsArn, snsArn, sqsUrl);
-						const sqsPolicyLogicalId = this.getSqsPolicyLogicalId(functionName, sqsArn, snsArn);
-						this.addToTemplate(sqsPolicyLogicalId, sqsPolicy);
-						this.verboseLog(`added SQS queue policy: ${sqsPolicy}`);
+            
+						if (value.event.eventBus) {
+							const eventBusName = this.getEventBusName(value.event);
+							const eventBusRule = this.createEventBusRule(sqsArn, eventBusName, value.event);
+							this.verboseLog(`added EventBus rule: ${eventBusRule}`);
+						} else if (value.event.sns) {
+							const snsArn = this.getOrCreateSnsTopic(value.event);
+							const snsSubscription = this.createSnsSubscription(sqsArn, snsArn, value.event);
+							const snsSubscriptionLogicalId = this.getSnsSubscriptionLogicalId(functionName, sqsArn, snsArn);
+							this.addToTemplate(snsSubscriptionLogicalId, snsSubscription);
+							this.verboseLog(`added SNS subscription: ${snsSubscription}`);
+
+							const sqsPolicy = this.createSqsPolicy(sqsArn, snsArn, sqsUrl);
+							const sqsPolicyLogicalId = this.getSqsPolicyLogicalId(functionName, sqsArn, snsArn);
+							this.addToTemplate(sqsPolicyLogicalId, sqsPolicy);
+							this.verboseLog(`added SQS queue policy: ${sqsPolicy}`);
+						}
 
 						sqsEvents.push({
 							sqs: {

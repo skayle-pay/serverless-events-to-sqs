@@ -25,6 +25,23 @@ const sns = Joi.alternatives().try(
 	})
 );
 
+const snsEvent = Joi.object({
+	sns: sns.required(),
+	rawMessageDelivery: Joi.bool(),
+	filterPolicy: Joi.object(), 
+});
+
+
+const eventBridgeEvent = Joi.object({
+	eventBus: Joi.string().required(),
+	pattern: Joi.object()
+});
+
+const event = Joi.alternatives().try(
+	snsEvent,
+	eventBridgeEvent
+).match("one");
+
 const sqsQueue = Joi.object({
 	logicalId: Joi.string(),
 	queueName: Joi.string().required(),
@@ -52,9 +69,7 @@ const sqs = Joi.alternatives().try(
 );
 
 const schema = Joi.object({
-	sns: sns.required(),
-	rawMessageDelivery: Joi.bool(),
-	filterPolicy: Joi.object(),
+	event: event.required(),
 	sqs: sqs.required(),
 	batchSize: Joi.number()
 		.min(1)
