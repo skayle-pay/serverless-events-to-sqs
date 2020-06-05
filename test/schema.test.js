@@ -19,7 +19,7 @@ describe("schema", () => {
   
 	test("sns and sqs can be a simple ARN", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: "arn:aws:sns"
 			},
 			sqs: "arn:aws:sqs"
@@ -30,7 +30,7 @@ describe("schema", () => {
 
 	test("eventBridge should have a event bus name", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				eventBus: "custom-event-bus"
 			},
 			sqs: "arn:aws:sqs"
@@ -41,7 +41,7 @@ describe("schema", () => {
 
 	test("sns can be a Ref", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: {
 					Ref: "MyTopic"
 				},
@@ -54,7 +54,7 @@ describe("schema", () => {
   
 	test("sns can be a simple Sub", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 			  sns: {
   				"Fn::Sub": "arn:aws:sns:${AWS::Region}:${AWS::Account}:topic"
 				}
@@ -67,7 +67,7 @@ describe("schema", () => {
   
 	test("sns can be a complex Sub", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: {
 					"Fn::Sub": [
 						"arn:aws:sns:${AWS::Region}:${AWS::Account}:${TopicName}",
@@ -85,7 +85,7 @@ describe("schema", () => {
   
 	test("sns can be a simple ImportValue", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: {
 					"Fn::ImportValue": "OtherStack-TopicName"
 				}
@@ -98,7 +98,7 @@ describe("schema", () => {
   
 	test("sns can be a complex ImportValue", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: {
 					"Fn::ImportValue": {
 						"Fn::Sub": "${OtherStack}-TopicName"
@@ -113,7 +113,7 @@ describe("schema", () => {
   
 	test("sns can be an object", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: {
 					displayName: "my-topic",
 					topicName: "my-topic"
@@ -127,7 +127,7 @@ describe("schema", () => {
   
 	test("when sns is an object, sns.displayName is required", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: {
 					topicName: "my-topic"
 				}
@@ -140,7 +140,7 @@ describe("schema", () => {
   
 	test("sqs can be a GetAtt", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: "arn:aws:sns",
 			},
 			sqs: {
@@ -153,7 +153,7 @@ describe("schema", () => {
   
 	test("sqs can be a simple Sub", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: "arn:aws:sns"
 			},
 			sqs: {
@@ -166,7 +166,7 @@ describe("schema", () => {
   
 	test("sqs can be a complex Sub", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: "arn:aws:sns"
 			},
 			sqs: {
@@ -184,7 +184,7 @@ describe("schema", () => {
   
 	test("sqs can be a simple ImportValue", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: "arn:aws:sns"
 			},
 			sqs: {
@@ -197,7 +197,7 @@ describe("schema", () => {
   
 	test("sqs can be a complex ImportValue", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: "arn:aws:sns"
 			},
 			sqs: {
@@ -212,7 +212,7 @@ describe("schema", () => {
   
 	test("sqs can be an object", () => {
 		const {error} = schema.validate({
-			event: {
+			eventSource: {
 				sns: "arn:aws:sns"
 			},
 			sqs: {

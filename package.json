@@ -1,5 +1,5 @@
 {
-  "name": "@totallymoney/serverless-sns-to-sqs-events",
+  "name": "@skayle-pay/serverless-events-to-sqs",
   "version": "0.0.0-dev",
   "description": "",
   "main": "src/index.js",
@@ -41,15 +41,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/totallymoney/serverless-sns-to-sqs-events.git"
+    "url": "git+https://github.com/skayle-pay/serverless-events-to-sqs.git"
   },
   "keywords": [],
-  "author": "TotallyMoney (https://totallymoney.com)",
+  "author": "Skayle (https://skayle.com)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/totallymoney/serverless-sns-to-sqs-events/issues"
+    "url": "https://github.com/skayle-pay/serverless-events-to-sqs/issues"
   },
-  "homepage": "https://github.com/totallymoney/serverless-sns-to-sqs-events#readme",
+  "homepage": "https://github.com/skayle-pay/serverless-events-to-sqs#readme",
   "prettier": {
     "useTabs": true,
     "tabWidth": 4,

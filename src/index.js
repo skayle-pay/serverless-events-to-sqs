@@ -10,18 +10,18 @@ class ServerlessSnsToSqsEvents {
 			});
 		};
 		this.provider = this.serverless.getProvider("aws");
-		this.log = msg => this.serverless.cli.log(`serverless-sns-to-sqs-events plugin:\n${msg}`);
+		this.log = msg => this.serverless.cli.log(`serverless-events-to-sqs plugin:\n${msg}`);
 		this.verboseLog = msg => {
 			if (process.env.SLS_DEBUG) {
 				this.log(msg);
 			}
 		};
 		this.error = error => {
-			throw new this.serverless.classes.Error(`snsToSqs event: ${error.message}`);
+			throw new this.serverless.classes.Error(`eventsToSqs event: ${error.message}`);
 		};
 
 		this.hooks = {
-			"before:package:compileEvents": this.compileSnSToSqsEvents.bind(this)
+			"before:package:compileEvents": this.compileEventsToSqs.bind(this)
 		};
 	}
 
@@ -168,7 +168,7 @@ class ServerlessSnsToSqsEvents {
 		};
 	}
 
-	createSqsPolicy(sqsArn, snsArn, sqsUrl) {
+	createSqsPolicy(sqsArn, sourceArn, sqsUrl) {
 		return {
 			Type: "AWS::SQS::QueuePolicy",
 			Properties: {
@@ -178,11 +178,11 @@ class ServerlessSnsToSqsEvents {
 					Statement: {
 						Effect: "Allow",
 						Principal: "*",
-						Action: "SQS:SendMessage",
+						Action: "sqs:SendMessage",
 						Resource: sqsArn,
 						Condition: {
 							ArnEquals: {
-								"aws:SourceArn": snsArn
+								"aws:SourceArn": sourceArn
 							}
 						}
 					}
@@ -215,6 +215,14 @@ class ServerlessSnsToSqsEvents {
 		}
 	}
 
+	getEventBusRuleLogicalId(functionName, sqsArn, eventBusName) {
+		const prefix = this.provider.naming.getLambdaLogicalId(functionName);
+		const sqsId = this.convertSqsArnToLogicalId(sqsArn);
+		const eventBusId = this.getLogicalId(eventBusName, "EventBus");;
+
+		return `${prefix}${eventBusId}To${sqsId}Rule`;
+	}
+
 	getSnsSubscriptionLogicalId(functionName, sqsArn, snsArn) {
 		const prefix = this.provider.naming.getLambdaLogicalId(functionName);
 		const sqsId = this.convertSqsArnToLogicalId(sqsArn);
@@ -231,15 +239,15 @@ class ServerlessSnsToSqsEvents {
 		return `${prefix}${snsId}To${sqsId}QueuePolicy`;
 	}
 
-	compileSnSToSqsEvents() {
+	compileEventsToSqs() {
 		this.serverless.service.getAllFunctions().forEach(functionName => {
 			const functionObj = this.serverless.service.getFunction(functionName);
 
 			if (functionObj.events) {
 				const sqsEvents = [];
 				functionObj.events.forEach(event => {
-					if (event.snsToSqs) {
-						const { value, error } = schema.validate(event.snsToSqs);
+					if (event.eventsToSqs) {
+						const { value, error } = schema.validate(event.eventsToSqs);
 						if (error) {
 							this.error(error);
 						}
@@ -247,13 +255,21 @@ class ServerlessSnsToSqsEvents {
 						const sqsArn = this.getOrCreateSqsQueue(value);
 						const sqsUrl = this.getSqsUrl(sqsArn);
             
-						if (value.event.eventBus) {
-							const eventBusName = this.getEventBusName(value.event);
-							const eventBusRule = this.createEventBusRule(sqsArn, eventBusName, value.event);
+						if (value.eventSource.eventBus) {
+							const eventBusName = this.getEventBusName(value.eventSource);
+							const eventBusRule = this.createEventBusRule(sqsArn, eventBusName, value.eventSource);
+							const eventBusRuleLogicalId = this.getEventBusRuleLogicalId(functionName, sqsArn, eventBusName);
+							this.addToTemplate(eventBusRuleLogicalId, eventBusRule);
 							this.verboseLog(`added EventBus rule: ${eventBusRule}`);
-						} else if (value.event.sns) {
-							const snsArn = this.getOrCreateSnsTopic(value.event);
-							const snsSubscription = this.createSnsSubscription(sqsArn, snsArn, value.event);
+
+							const ruleArn = {"Fn::GetAtt": [eventBusRuleLogicalId, "Arn"]};
+							const sqsPolicy = this.createSqsPolicy(sqsArn, ruleArn, sqsUrl);
+							const sqsPolicyLogicalId = this.getSqsPolicyLogicalId(functionName, sqsArn, eventBusName);
+							this.addToTemplate(sqsPolicyLogicalId, sqsPolicy);
+							this.verboseLog(`added SQS queue policy: ${sqsPolicy}`);
+						} else if (value.eventSource.sns) {
+							const snsArn = this.getOrCreateSnsTopic(value.eventSource);
+							const snsSubscription = this.createSnsSubscription(sqsArn, snsArn, value.eventSource);
 							const snsSubscriptionLogicalId = this.getSnsSubscriptionLogicalId(functionName, sqsArn, snsArn);
 							this.addToTemplate(snsSubscriptionLogicalId, snsSubscription);
 							this.verboseLog(`added SNS subscription: ${snsSubscription}`);

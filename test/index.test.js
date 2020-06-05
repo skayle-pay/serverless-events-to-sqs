@@ -44,7 +44,7 @@ describe("serverless-sns-to-sqs-events", () => {
 			hello: {
 				handler: "handler.hello",
 				events: [{
-					snsToSqs: {
+					eventsToSqs: {
 						sns: [42]
 					}
 				}]
@@ -256,8 +256,8 @@ function givenAnSnsToSqsEvent (sns, sqs, rawDelivery) {
 		hello: {
 			handler: "handler.hello",
 			events: [{
-				snsToSqs: {
-					event: {
+				eventsToSqs: {
+					eventSource: {
 						sns: sns,
 						rawMessageDelivery: rawDelivery,
 					},
