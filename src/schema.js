@@ -37,7 +37,7 @@ const eventBridgeEvent = Joi.object({
 	pattern: Joi.object()
 });
 
-const eventSource = Joi.alternatives().try(
+const source = Joi.alternatives().try(
 	snsEvent,
 	eventBridgeEvent
 ).match("one");
@@ -69,7 +69,7 @@ const sqs = Joi.alternatives().try(
 );
 
 const schema = Joi.object({
-	eventSource: eventSource.required(),
+	source: source.required(),
 	sqs: sqs.required(),
 	batchSize: Joi.number()
 		.min(1)

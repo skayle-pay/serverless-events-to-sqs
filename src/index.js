@@ -255,9 +255,9 @@ class ServerlessSnsToSqsEvents {
 						const sqsArn = this.getOrCreateSqsQueue(value);
 						const sqsUrl = this.getSqsUrl(sqsArn);
             
-						if (value.eventSource.eventBus) {
-							const eventBusName = this.getEventBusName(value.eventSource);
-							const eventBusRule = this.createEventBusRule(sqsArn, eventBusName, value.eventSource);
+						if (value.source.eventBus) {
+							const eventBusName = this.getEventBusName(value.source);
+							const eventBusRule = this.createEventBusRule(sqsArn, eventBusName, value.source);
 							const eventBusRuleLogicalId = this.getEventBusRuleLogicalId(functionName, sqsArn, eventBusName);
 							this.addToTemplate(eventBusRuleLogicalId, eventBusRule);
 							this.verboseLog(`added EventBus rule: ${eventBusRule}`);
@@ -267,9 +267,9 @@ class ServerlessSnsToSqsEvents {
 							const sqsPolicyLogicalId = this.getSqsPolicyLogicalId(functionName, sqsArn, eventBusName);
 							this.addToTemplate(sqsPolicyLogicalId, sqsPolicy);
 							this.verboseLog(`added SQS queue policy: ${sqsPolicy}`);
-						} else if (value.eventSource.sns) {
-							const snsArn = this.getOrCreateSnsTopic(value.eventSource);
-							const snsSubscription = this.createSnsSubscription(sqsArn, snsArn, value.eventSource);
+						} else if (value.source.sns) {
+							const snsArn = this.getOrCreateSnsTopic(value.source);
+							const snsSubscription = this.createSnsSubscription(sqsArn, snsArn, value.source);
 							const snsSubscriptionLogicalId = this.getSnsSubscriptionLogicalId(functionName, sqsArn, snsArn);
 							this.addToTemplate(snsSubscriptionLogicalId, snsSubscription);
 							this.verboseLog(`added SNS subscription: ${snsSubscription}`);
